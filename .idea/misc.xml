@@ -3,7 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/bg_error_dialog.xml" value="0.2324074074074074" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.3098958333333333" />
+        <entry key="app/src/main/res/layout/item_loading.xml" value="0.3098958333333333" />
+        <entry key="app/src/main/res/layout/item_user.xml" value="0.3098958333333333" />
+        <entry key="app/src/main/res/layout/layout_error_dialog.xml" value="0.3098958333333333" />
       </map>
     </option>
   </component>

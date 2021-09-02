@@ -3,7 +3,8 @@ package com.example.githubsearch.datamodel
 import com.google.gson.annotations.SerializedName
 
 data class UserList(
-    @SerializedName("items") val userList: List<User>
+    @SerializedName("total_count") val totalCount: Int,
+    @SerializedName("items") val users: List<User>
 )
 
 data class User(

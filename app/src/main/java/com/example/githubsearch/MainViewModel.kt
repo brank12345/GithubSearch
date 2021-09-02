@@ -1,34 +1,53 @@
 package com.example.githubsearch
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import com.example.githubsearch.api.Api
+import androidx.lifecycle.viewModelScope
 import com.example.githubsearch.base.BaseLoadingViewModel
-import com.example.githubsearch.datamodel.Result
+import com.example.githubsearch.base.SingleLiveEvent
 import com.example.githubsearch.datamodel.User
-import com.example.githubsearch.utils.getResult
-import com.example.githubsearch.utils.safeApiCall
+import kotlinx.coroutines.launch
 
 class MainViewModel(application: Application) : BaseLoadingViewModel(application) {
 
-    private val api get() = Api.create()
+    private val remoteDataSource = MainRemoteDataSource()
     private var currentPage = 1
-    val useListLiveData = MutableLiveData<List<User>>()
+    var searchKey = ""
+    val needToLoadNextEvent = SingleLiveEvent<Void>()
+    val useListLiveData = MutableLiveData<List<SearchUiModel>>()
 
-    fun searchUsers(key: String) {
+    fun searchUsers() {
+        useListLiveData.value = listOf()
+        currentPage = 1
+
         sendApi {
-            getSearchUsers(key, currentPage).handleResult {
-                useListLiveData.value = it.userList
+            getSearchUsers().handleResult { data ->
+                useListLiveData.value = mutableListOf<SearchUiModel>().apply {
+                    addAll(data.users.map { user -> SearchUiModel.UserUiModel(user) })
+                    if (size < data.totalCount) add(SearchUiModel.LoadingUiModel)
+                }
             }
         }
     }
 
     fun loadNextPage() {
-        // TODO
+        currentPage++
+
+        viewModelScope.launch {
+            getSearchUsers().handleResult { data ->
+                useListLiveData.value = mutableListOf<SearchUiModel>().apply {
+                    useListLiveData.value?.also { addAll(it.subList(0, it.size-1)) }
+                    addAll(data.users.map { user -> SearchUiModel.UserUiModel(user) })
+                    if (size < data.totalCount) add(SearchUiModel.LoadingUiModel)
+                }
+            }
+        }
     }
 
-    private suspend fun getSearchUsers(key: String, page: Int) = safeApiCall {
-        api.getSearchUsers(key, 1).getResult()
-    }
+    private suspend fun getSearchUsers() = remoteDataSource.getSearchUsers(searchKey, currentPage)
+}
+
+sealed class SearchUiModel {
+    class UserUiModel(val user: User) : SearchUiModel()
+    object LoadingUiModel : SearchUiModel()
 }
